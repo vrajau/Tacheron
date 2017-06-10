@@ -34,8 +34,16 @@ selectConfig()
 displayFile()
 {
   if [ -f $1 ];then
-    cat $fileLocation
+     cat $1
   else
     echo "The file $1 does not exist. Please create it with option -e"
   fi
+}
+
+createOrModify()
+{
+  $(touch $TEMPFILE )
+  vi $TEMPFILE
+  $(cat $TEMPFILE >> $1 )
+  $(rm -f $TEMPFILE)
 }

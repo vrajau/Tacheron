@@ -16,12 +16,12 @@ if [ $EUID -eq 0 ];then
         ;;
       l)
         displayFile $(selectConfig $user)
-      ;;
+        ;;
+      e)
+        createOrModify $(selectConfig $user)
+        ;;
       esac
     done
-
-
-
 else
   echo "You must be root user to use tacherontab command">&2
 fi
