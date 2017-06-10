@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source functions/tacherontabFunctions.sh
+source functions/commonFunctions.sh
 
 if [ "$EUID" -eq 0 ];then
   init #initialize folder
