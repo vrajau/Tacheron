@@ -2,7 +2,7 @@
 
 source functions/tacherontabFunctions.sh
 
-if [ $EUID -eq 0 ];then
+if [ "$EUID" -eq 0 ];then
   init #initialize folder
   user=""
   while getopts "u:rel" option; do
@@ -19,6 +19,9 @@ if [ $EUID -eq 0 ];then
         ;;
       e)
         createOrModify $(selectConfig $user)
+        ;;
+      r)
+        deleteFile $(selectConfig $user)
         ;;
       esac
     done
