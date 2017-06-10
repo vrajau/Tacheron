@@ -2,7 +2,7 @@
 
 
 source settings.sh
-
+source functions/commonFunctions.sh
 
 
 
