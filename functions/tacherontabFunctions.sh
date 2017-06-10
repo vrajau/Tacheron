@@ -3,6 +3,7 @@
 
 source settings.sh
 
+#Initialize by creating needed file
 init()
 {
   if [ ! -d "$CONFIGUSER" ];then
