@@ -10,13 +10,12 @@ if [ $EUID -eq 0 ];then
       u)
         if [ $(checkUserId $OPTARG ) -eq 0 ];then
           user=$OPTARG
-          echo $user
         else
           echo "The specified user does not exist. Tacherontab is going to use general configuration">&2
         fi
         ;;
       l)
-        selectConfig $user
+        displayFile $(selectConfig $user)
       ;;
       esac
     done
