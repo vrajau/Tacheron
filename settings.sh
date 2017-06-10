@@ -1,4 +1,4 @@
 #!/bin/bash
 
-declare -r CONFIGUSER="/etc/tacherontab/"
-declare -r CONFIGALL="/etc/tacheron"
+declare -r CONFIGUSER="/etc/tacheron/"
+declare -r CONFIGALL="/etc/tacherontab"
