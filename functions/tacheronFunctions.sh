@@ -37,7 +37,7 @@ isUserAllowed(){
 }
 
 analyseAndExecute(){
-  testee="6"
+  testee="0-3~1~2"
   parseSecond=$(checkValues "$testee")
   echo $parseSecond
   to=$(secondParser $parseSecond "$testee")
@@ -53,11 +53,11 @@ validField(){
 checkValues()
 {
 
-  if  [[ "$1" =~ ^[[:digit:]]$ ]];then
+  if  [[ "$1" =~ ^[[:digit:]]+$ ]];then
     echo "classic"
-  elif [[ "$1" =~ ^([[:digit:]](,[[:digit:]])+)$ ]];then
+  elif [[ "$1" =~ ^([[:digit:]]+(,[[:digit:]]+)+)$ ]];then
     echo "virgule"
-  elif [[ "$1" =~ ^[[:digit:]]-[[:digit:]](~[[:digit:]])*$ ]];then
+  elif [[ "$1" =~ ^[[:digit:]]+-[[:digit:]]+(~[[:digit:]]+)*$ ]];then
     echo "intervalle"
   elif [[ "$1" == "*" ]];then
     echo "all"
@@ -80,12 +80,27 @@ secondParser()
   second=$(convertSecond "$2")
   case $1 in
     classic)
-      echo $(echo $second|awk -v var=$currentSecond 'var==$0 {print "true"}')
+      echo $(echo $second|awk -v var=$currentSecond 'var==$1 {print "true"}')
       ;;
     virgule)
       #We don't need to check if every values is correct or duplicate, we just check if current second
       #is allowed and we break the loop if it's the case. Save some time and work
       echo $(echo $second|awk -F ',' -v var=$currentSecond '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
+      ;;
+    intervalle)
+      #Let's check if all of those numbers are valid
+      isValid=$(echo $second|sed -e 's/~/-/g'|awk -F '-' '{for(i=1;i<=NF;i++)if($i%15!=0 || $i>60){print "false"; break}}')
+      if [ -z "$isValid" ];then
+        read begin end <<< $(echo $second|awk -F '~' '{print $1}'|awk -F '-' '{print $1;print $2}')
+        if [ "$begin" -lt "$end" ] && [ $currentSecond -ge $begin ] && [ $currentSecond -le $end ] && [ $(expr $currentSecond % 15) -eq 0 ];then
+          notAllowed=$(echo $second|sed -e 's/[0-9]*-[0-9]*//g')
+          isAllowed=$(echo $notAllowed|awk -F '~' -v var=$currentSecond '{for(i=1;i<=NF;i++)if(var==$i){print "false"}}')
+          if [ -z "$isAllowed" ];then
+            echo "true"
+          fi
+        fi
+      fi
+
       ;;
     all)
       echo $(echo true|awk -v var=$currentSecond '(var%15 == 0){print $0}')
