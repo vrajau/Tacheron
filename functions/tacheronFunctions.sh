@@ -52,7 +52,7 @@ analyseAndExecute(){
   dayWeek=$(generalParser $(getFieldType "$6") "$6" $(date +%w) 0 6)
 
   if [ "$second" = true ] && [ "$minute" = true ] && [ "$hour" = true ] && [ "$dayMonth" = true ] && [ "$month" = true ] && [ "$dayWeek" = true ];then
-    echo "execute command"
+    $7
   fi
 
 }

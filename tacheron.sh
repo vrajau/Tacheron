@@ -19,7 +19,9 @@ fi
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   while read task;do
     if [ ! -z $(validField "$task") ];then
-      analyseAndExecute $task
+      timeField=$(echo $task|awk '{for(i=1;i<=6;i++) print $i}')
+      commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
+       analyseAndExecute $timeField "$commande"
     fi
   done < $CONFIGALL
 else
