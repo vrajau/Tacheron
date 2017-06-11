@@ -37,10 +37,11 @@ isUserAllowed(){
 }
 
 analyseAndExecute(){
-  testee="0-3~1~2"
-  parseSecond=$(checkValues "$testee")
-  echo $parseSecond
-  to=$(secondParser $parseSecond "$testee")
+  testee="60-79000~17~18"
+  # parseSecond=$(checkValues "$testee")
+  parseMinute=$(checkValues "$testee")
+  echo $parseMinute
+  to=$(minuteParser $parseMinute "$testee")
   echo "$to"
 
 }
@@ -104,6 +105,39 @@ secondParser()
       ;;
     all)
       echo $(echo true|awk -v var=$currentSecond '(var%15 == 0){print $0}')
+      ;;
+    esac
+}
+
+
+minuteParser(){
+  currentMinute=$(date +%M)
+  case $1 in
+    classic)
+      echo $(echo $2|awk -v var=$currentMinute 'var==$1 {print "true"}')
+      ;;
+    virgule)
+      #We don't need to check if every values is correct or duplicate, we just check if current second
+      #is allowed and we break the loop if it's the case. Save some time and work
+      echo $(echo $2|awk -F ',' -v var=$currentMinute '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
+      ;;
+    intervalle)
+      #Let's check if all of those numbers are valid
+      isValid=$(echo $2|sed -e 's/~/-/g'|awk -F '-' '{for(i=1;i<=NF;i++)if($i<0 || $i>59){print "false"; break}}')
+      if [ -z "$isValid" ];then
+        read begin end <<< $(echo $2|awk -F '~' '{print $1}'|awk -F '-' '{print $1;print $2}')
+        if [ "$begin" -lt "$end" ] && [ $currentMinute -ge $begin ] && [ $currentMinute -le $end ];then
+          notAllowed=$(echo $2|sed -e 's/[0-9]*-[0-9]*//g')
+          isAllowed=$(echo $notAllowed|awk -F '~' -v var=$currentMinute '{for(i=1;i<=NF;i++)if(var==$i){print "false"}}')
+          if [ -z "$isAllowed" ];then
+            echo "true"
+          fi
+        fi
+      fi
+
+      ;;
+    all)
+      echo "true"
       ;;
     esac
 }
