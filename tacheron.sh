@@ -18,9 +18,8 @@ fi
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   while read task;do
     if [ ! -z $(validField "$task") ];then
-      echo "valide"
+      analyseAndExecute
     fi
-
   done < $CONFIGALL
 else
   echo "You are not allowed to use Tacheron. Contact your administrator">&2

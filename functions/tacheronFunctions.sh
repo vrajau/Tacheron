@@ -36,11 +36,54 @@ isUserAllowed(){
   echo $isAllowed
 }
 
-checkIntegrity(){
-  read second<<<$(echo $1|awk '$1>=0 && $1<4{print $1}')
+analyseAndExecute(){
+  testee="0"
+  parseSecond=$(checkValues "$testee")
+  to=$(secondParser $parseSecond "$testee")
+  echo "$to"
+
 }
 
 
 validField(){
-  echo $(echo $1| awk 'NF==7{print $1}')
+  echo $(echo "$1"| awk 'NF==7{print $1}')
+}
+
+checkValues()
+{
+
+  if  [[ "$1" =~ ^[[:digit:]]$ ]];then
+    echo "classic"
+  elif [[ "$1" =~ ^([[:digit:]](,[[:digit:]])+)$ ]];then
+    echo "virgule"
+  elif [[ "$1" =~ ^[[:digit:]]-[[:digit:]](~[[:digit:]])*$ ]];then
+    echo "intervalle"
+  elif [[ "$1" == "*" ]];then
+    echo "all"
+  else
+    echo "none"
+  fi
+
+}
+
+
+convertSecond()
+{
+  echo $(echo "$1"|sed -e '{s/[1]/15/g;s/[3]/45/g;s/[2]/30/g}')
+}
+
+
+secondParser()
+{
+  currentSecond=$(date +%S)
+  case $1 in
+    classic)
+      second=$(convertSecond "$2")
+      echo $second
+      echo $(echo $second|awk -v var=$currentSecond '($0%15 == 0) && var==$0 {print "true"}')
+      ;;
+    all)
+      echo $(echo true|awk -v var=$currentSecond '(var%15 == 0){print $0}')
+      ;;
+    esac
 }
