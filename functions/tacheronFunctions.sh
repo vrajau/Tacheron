@@ -37,8 +37,9 @@ isUserAllowed(){
 }
 
 analyseAndExecute(){
-  testee="0"
+  testee="6"
   parseSecond=$(checkValues "$testee")
+  echo $parseSecond
   to=$(secondParser $parseSecond "$testee")
   echo "$to"
 
@@ -76,11 +77,15 @@ convertSecond()
 secondParser()
 {
   currentSecond=$(date +%S)
+  second=$(convertSecond "$2")
   case $1 in
     classic)
-      second=$(convertSecond "$2")
-      echo $second
-      echo $(echo $second|awk -v var=$currentSecond '($0%15 == 0) && var==$0 {print "true"}')
+      echo $(echo $second|awk -v var=$currentSecond 'var==$0 {print "true"}')
+      ;;
+    virgule)
+      #We don't need to check if every values is correct or duplicate, we just check if current second
+      #is allowed and we break the loop if it's the case. Save some time and work
+      echo $(echo $second|awk -F ',' -v var=$currentSecond '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
       ;;
     all)
       echo $(echo true|awk -v var=$currentSecond '(var%15 == 0){print $0}')
