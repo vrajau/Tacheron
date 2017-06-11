@@ -19,7 +19,6 @@ fi
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   while read task;do
     if [ ! -z $(validField "$task") ];then
-      echo "yo"
       analyseAndExecute $task
     fi
   done < $CONFIGALL
