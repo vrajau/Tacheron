@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source functions/tacheronFunctions.sh
+set -f # We cannot man settings
 currentUser=$(whoami)
 config=$(checkConfiguration)
 
@@ -18,7 +19,8 @@ fi
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   while read task;do
     if [ ! -z $(validField "$task") ];then
-      analyseAndExecute
+      echo "yo"
+      analyseAndExecute $task
     fi
   done < $CONFIGALL
 else
