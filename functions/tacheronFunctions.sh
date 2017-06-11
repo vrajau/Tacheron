@@ -35,3 +35,12 @@ isUserAllowed(){
 
   echo $isAllowed
 }
+
+checkIntegrity(){
+  read second<<<$(echo $1|awk '$1>=0 && $1<4{print $1}')
+}
+
+
+validField(){
+  echo $(echo $1| awk 'NF==7{print $1}')
+}
