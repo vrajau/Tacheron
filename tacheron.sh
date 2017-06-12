@@ -13,12 +13,12 @@ set -f # We cannot man settings
 
 init()
 {
-  if [ ! -d "$CONFIGUSER" ];then
-    $(mkdir $CONFIGUSER)
+  if [ ! -d "$TASKUSER" ];then
+    $(mkdir $TASKUSER)
   fi
 
-  if [ ! -f "$CONFIGALL" ];then
-    $(touch $CONFIGALL)
+  if [ ! -f "$TASKGENERAL" ];then
+    $(touch $TASKGENERAL)
   fi
 }
 
@@ -36,7 +36,7 @@ initTacheron()
 
 
 checkConfiguration(){
-  if [ ! -f "$LOG" -o ! -f "$WHITELIST"  -o ! -f $CONFIGALL ];then
+  if [ ! -f "$LOG" -o ! -f "$WHITELIST"  -o ! -f $TASKGENERAL ];then
     echo false
   else
     echo true
@@ -166,6 +166,12 @@ generalParser(){
 }
 
 
+log()
+{
+    date=$(date +%c)
+    echo "$date : $1" >> $LOG
+}
+
 
 
 ##############################
@@ -182,6 +188,7 @@ config=$(checkConfiguration)
 if [ "$config" = false ] && [ "$EUID" -eq 0 ];then
   initTacheron
   echo "Tacheron was succesfully initialized"
+  $(log "First Tacheron Initialization")
 elif [ "$config" = false ];then
   echo "When this is your first time running Tacheron, you must run the command as root user">&2
   exit 1
@@ -189,6 +196,7 @@ fi
 
 
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
+  log "$currentUser started Tacheron"
   while true;
   do
       while read task;do
@@ -197,7 +205,7 @@ if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
           commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
            analyseAndExecute $timeField "$commande"
         fi
-      done < $CONFIGALL
+      done < $TASKGENERAL
       $(sleep 0.7)
   done
 else

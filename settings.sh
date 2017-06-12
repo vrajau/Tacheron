@@ -3,9 +3,9 @@
 #Constant used by each command
 
 #The directory containing the config file for each user
-declare -r CONFIGUSER="/etc/tacheron/"
+declare -r TASKUSER="/etc/tacheron/"
 #The config file for every user
-declare -r CONFIGALL="/etc/tacherontab"
+declare -r TASKGENERAL="/etc/tacherontab"
 #Temporary file created to be added to either the general config file or user config file
 declare -r TEMPFILE="/tmp/tacherontabtempfile"
 #The log file
