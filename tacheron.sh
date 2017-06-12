@@ -70,8 +70,6 @@ analyseAndExecute(){
   month=$(generalParser $(getFieldType "$5") "$5" $(date +%m) 1 12)
   dayWeek=$(generalParser $(getFieldType "$6") "$6" $(date +%w) 0 6)
 
-  echo $second
-  echo $(convertSecond "$1")
   if [ "$second" = true ] && [ "$minute" = true ] && [ "$hour" = true ] && [ "$dayMonth" = true ] && [ "$month" = true ] && [ "$dayWeek" = true ];then
     $7
   fi
