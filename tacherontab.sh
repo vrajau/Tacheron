@@ -11,12 +11,12 @@ source ${BASH_SOURCE%/*}/settings.sh
 
 init()
 {
-  if [ ! -d "$CONFIGUSER" ];then
-    $(mkdir $CONFIGUSER)
+  if [ ! -d "$TASKUSER" ];then
+    $(mkdir $TASKUSER)
   fi
 
-  if [ ! -f "$CONFIGALL" ];then
-    $(touch $CONFIGALL)
+  if [ ! -f "$TASKGENERAL" ];then
+    $(touch $TASKGENERAL)
   fi
 }
 
@@ -30,9 +30,9 @@ checkUserId()
 #Select the proper config to check if it's general config or user config
 selectConfig()
 {
-  configFile=$CONFIGALL
+  configFile=$TASKGENERAL
   if [ ! -z "$1" ];then
-    configFile=$CONFIGUSER"tacherontab"$1
+    configFile=$TASKUSER"tacherontab"$1
   fi
   echo $configFile
 }
@@ -57,7 +57,7 @@ createOrModify()
 
 deleteFile()
 {
-  if [ "$1" == "$CONFIGALL" ];then
+  if [ "$1" == "$TASKGENERAL" ];then
     #If this is general configuration, no need to delete file
     #Most efficient method to delete content of file
      $(truncate -s 0 $1)

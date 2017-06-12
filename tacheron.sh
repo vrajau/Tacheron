@@ -70,14 +70,13 @@ analyseAndExecute(){
   month=$(generalParser $(getFieldType "$5") "$5" $(date +%m) 1 12)
   dayWeek=$(generalParser $(getFieldType "$6") "$6" $(date +%w) 0 6)
 
+  echo $second
+  echo $(convertSecond "$1")
   if [ "$second" = true ] && [ "$minute" = true ] && [ "$hour" = true ] && [ "$dayMonth" = true ] && [ "$month" = true ] && [ "$dayWeek" = true ];then
     $7
   fi
 
 }
-
-
-
 
 
 getFieldType()
@@ -100,7 +99,7 @@ getFieldType()
 
 convertSecond()
 {
-  echo $(echo "$1"|sed -e '{s/[1]/15/g;s/[3]/45/g;s/[2]/30/g}')
+  echo $(echo "$1"|sed -e '{s/\b[1]\b/15/g;s/\b[2]\b/30/g;s/\b[3]\b/45/g}')
 }
 
 
@@ -109,10 +108,10 @@ secondParser()
 
   case $1 in
     classic)
-      echo $(echo $2|awk -v var=$3 'var==$1 {print "true"}')
+      echo $(echo $2|awk -v var=$3 'var==$1 && var%15==0 {print "true"}')
       ;;
     virgule)
-      echo $(echo $2|awk -F ',' -v var=$3 '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
+      echo $(echo $2|awk -F ',' -v var=$3 '{for(i=1;i<=NF;i++)if(var==$i && var%15==0){print "true"; break}}')
       ;;
     intervalle)
       #Let's check if all of those numbers are valid
@@ -135,34 +134,50 @@ secondParser()
 }
 
 
-
-
 generalParser(){
   case $1 in
     classic)
-      echo $(echo $2|awk -v var=$3 'var==$1 {print "true"}')
+      echo $(classicGeneralParser $2 $3)
       ;;
     virgule)
-      echo $(echo $2|awk -F ',' -v var=$3 '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
+      echo $(virguleGeneralParser $2 $3)
       ;;
     intervalle)
-      #Let's check if all of those numbers are valid
-      isValid=$(echo $2|sed -e 's/~/-/g'|awk -F '-' -v begin=$4 -v end=$5 '{for(i=1;i<=NF;i++)if($i<begin || $i>end){print "false"; break}}')
-      if [ -z "$isValid" ];then
-        read begin end <<< $(echo $2|awk -F '~' '{print $1}'|awk -F '-' '{print $1;print $2}')
-        if [ "$begin" -lt "$end" ] && [ "$3" -ge "$begin" ] && [ "$3" -le "$end" ];then
-          notAllowed=$(echo $2|sed -e 's/[0-9]*-[0-9]*//g')
-          isAllowed=$(echo $notAllowed|awk -F '~' -v var=$3 '{for(i=1;i<=NF;i++)if(var==$i){print "false"}}')
-          if [ -z "$isAllowed" ];then
-            echo "true"
-          fi
-        fi
-      fi
+      echo $(intervalleGeneralParser $2 $3 $4 $5)
       ;;
     all)
       echo "true"
       ;;
     esac
+}
+
+classicGeneralParser()
+{
+  echo $(echo $1|awk -v var=$2 'var==$1 {print "true"}')
+}
+
+virguleGeneralParser()
+{
+  echo $(echo $1|awk -F ',' -v var=$2 '{for(i=1;i<=NF;i++)if(var==$i){print "true"; break}}')
+}
+
+intervalleGeneralParser()
+{
+  #Check if interval value are valid
+  validIntervalle=$(echo $1|sed -e 's/~/-/g'|awk -F '-' -v begin=$3 -v end=$4 '{for(i=1;i<=NF;i++)if($i<begin || $i>end){print "false"; break}}')
+
+  if [ -z "$validIntervalle" ];then
+    read begin end <<< $(echo $1|awk -F '~' '{print $1}'|awk -F '-' '{print $1;print $2}')
+
+    if [ "$begin" -lt "$end" ] && [ "$2" -ge "$begin" ] && [ "$2" -le "$end" ];then
+      valueNotAllowed=$(echo $1|sed -e 's/[0-9]*-[0-9]*//g')
+      isAllowed=$(echo $valueNotAllowed|awk -F '~' -v var=$2 '{for(i=1;i<=NF;i++)if(var==$i){print "false"}}')
+
+      if [ -z "$isAllowed" ];then
+        echo "true"
+      fi
+    fi
+  fi
 }
 
 
@@ -197,6 +212,7 @@ fi
 
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   log "$currentUser started Tacheron"
+  echo "Tacheron has started..."
   while true;
   do
       while read task;do
