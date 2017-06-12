@@ -55,7 +55,7 @@ isUserAllowed(){
   echo $isAllowed
 }
 
-validField(){
+isValidField(){
   echo $(echo "$1"| awk 'NF>=7{print $1}')
 }
 
@@ -167,6 +167,13 @@ generalParser(){
 
 
 
+
+##############################
+#                            #
+#        PROCESSUS           #
+#                            #
+##############################
+
 currentUser=$(whoami)
 config=$(checkConfiguration)
 
@@ -181,18 +188,11 @@ elif [ "$config" = false ];then
 fi
 
 
-##############################
-#                            #
-#        PROCESSUS           #
-#                            #
-##############################
-
-
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   while true;
   do
       while read task;do
-        if [ ! -z $(validField "$task") ];then
+        if [ ! -z $(isValidField "$task") ];then
           timeField=$(echo $task|awk '{for(i=1;i<=6;i++) print $i}')
           commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
            analyseAndExecute $timeField "$commande"

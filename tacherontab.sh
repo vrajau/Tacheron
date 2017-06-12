@@ -42,7 +42,7 @@ displayFile()
   if [ -f "$1" ];then
      cat $1
   else
-    echo "The file $1 does not exist. Please create it with option -e"
+    echo "The file $1 does not exist. Please create it with option -e">&2
   fi
 }
 
