@@ -23,7 +23,7 @@ init()
 
 checkUserId()
 {
-  test=$(id -u $1>/dev/null 2>&1)
+  $(id -u $1>/dev/null 2>&1)
   echo $? #Return 0 if user exist, else 1
 }
 

@@ -26,12 +26,17 @@ initTacheron()
 {
   init
   if [ ! -f "$LOG" ];then
+    $(groupadd tacheron) 2>/dev/null
     $(touch $LOG)
+    $(chown :tacheron $LOG)
+    $(chmod 660 $LOG)
   fi
 
   if [ ! -f "$WHITELIST" ];then
     $(touch $WHITELIST)
+    $(chown :tacheron $WHITELIST)
   fi
+
 }
 
 
@@ -72,8 +77,11 @@ analyseAndExecute(){
 
 
 
+
   if [ "$second" = true ] && [ "$minute" = true ] && [ "$hour" = true ] && [ "$dayMonth" = true ] && [ "$month" = true ] && [ "$dayWeek" = true ];then
-    $7
+    log "Command $7 was executed"
+    #Make sure that if the command is not valid it will not output to terminal
+    $7 2>/dev/null
   fi
 
 }
@@ -88,6 +96,10 @@ getFieldType()
     echo "virgule"
   elif [[ "$1" =~ ^[[:digit:]]+-[[:digit:]]+(~[[:digit:]]+)*$ ]];then
     echo "intervalle"
+  elif [[ "$1" =~ ^(\*\/([[:digit:]]+))$ ]];then
+    echo "all_regulier"
+  elif [[ "$1" =~ ^(([[:digit:]]+-[[:digit:]]+(~[[:digit:]]+)*)\/([[:digit:]]+)) ]];then
+    echo "intervalle_regulier"
   elif [[ "$1" == "*" ]];then
     echo "all"
   else
@@ -95,7 +107,6 @@ getFieldType()
   fi
 
 }
-
 
 convertSecond()
 {
@@ -165,6 +176,12 @@ generalParser()
     intervalle)
       echo $(intervalleGeneralParser $2 $3 $4 $5)
       ;;
+    intervalle_regulier)
+      echo $(regintervalleGeneralParser $2 $3 $4 $5)
+      ;;
+    all_regulier)
+      echo $(regAllGeneralParser $2 $3)
+      ;;
     all)
       echo "true"
       ;;
@@ -201,10 +218,54 @@ intervalleGeneralParser()
 }
 
 
+regintervalleGeneralParser()
+{
+  intervalle=$(echo $1| awk -F '/' '{print $1}')
+  determinant=$(echo "$1"| awk -F '/' -v date=$2 'date%$2==0{print "true"}')
+
+  if [ "$(intervalleGeneralParser "$intervalle" $2 $3 $4)" = true ] && [ "$determinant" = true ];then
+    echo "true"
+  fi
+}
+
+regAllGeneralParser()
+{
+  determinant=$(echo "$1"| awk -F '/' -v date=$2 'date%$2==0{print "true"}')
+  if [ "$determinant" = true ];then
+    echo "true"
+  fi
+}
+
+
+
 log()
 {
     date=$(date +%c)
-    echo "$date : $1" >> $LOG
+    echo "$date : $1">>$LOG
+    echo "$1">&1
+}
+
+checkUserId()
+{
+  $(id -u $1>/dev/null 2>&1)
+  echo $? #Return 0 if user exist, else 1
+}
+
+checkUserGroup()
+{
+  $(groups $1| grep -q "\btacheron\b")
+  echo $? #Return 0 if match, else 1
+}
+
+allowAccess()
+{
+
+  while read line;do
+    if [ $(checkUserId "$line") -eq 0 ] && [ $(checkUserGroup $line) -eq 1 ];then
+      log "User $line was added to list of Tacheron user"
+      $(usermod -a -G tacheron $line)
+    fi
+  done < $WHITELIST
 }
 
 
@@ -222,8 +283,9 @@ config=$(checkConfiguration)
 #Check if config file are initialized correctly
 if [ "$config" = false ] && [ "$EUID" -eq 0 ];then
   initTacheron
-  echo "Tacheron was succesfully initialized"
-  $(log "First Tacheron Initialization")
+  log "Tacheron was succesfully initialized">&1
+elif [ "$config" = true ] && [ "$EUID" -eq 0 ];then
+  allowAccess
 elif [ "$config" = false ];then
   echo "When this is your first time running Tacheron, you must run the command as root user">&2
   exit 1
@@ -232,14 +294,13 @@ fi
 
 if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
   log "$currentUser started Tacheron"
-  echo "Tacheron has started..."
   while true;
   do
       while read task;do
         if [ ! -z $(isValidField "$task") ];then
           timeField=$(echo $task|awk '{for(i=1;i<=6;i++) print $i}')
           commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
-           analyseAndExecute $timeField "$commande"
+          analyseAndExecute $timeField "$commande"
         fi
       done < $TASKGENERAL
       $(sleep 0.7)
