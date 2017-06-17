@@ -49,16 +49,6 @@ checkConfiguration(){
 }
 
 
-isUserAllowed(){
-  isAllowed=false
-  while read line; do
-    if [ "$1" == "$line" ];then
-      isAllowed=true
-    fi
-  done < $WHITELIST
-
-  echo $isAllowed
-}
 
 isValidField(){
   echo $(echo "$1"| awk 'NF>=7{print $1}')
@@ -80,6 +70,9 @@ analyseAndExecute(){
 
   if [ "$second" = true ] && [ "$minute" = true ] && [ "$hour" = true ] && [ "$dayMonth" = true ] && [ "$month" = true ] && [ "$dayWeek" = true ];then
     log "Command $7 was executed"
+    echo "-------------------------------"
+    echo "RESULT"
+    echo "-------------------------------"
     #Make sure that if the command is not valid it will not output to terminal
     $7 2>/dev/null
   fi
@@ -269,6 +262,19 @@ allowAccess()
 }
 
 
+executeTask()
+{
+  while read task;do
+
+    if [ ! -z $(isValidField "$task") ];then
+      timeField=$(echo $task|awk '{for(i=1;i<=6;i++) print $i}')
+      commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
+      analyseAndExecute $timeField "$commande"
+    fi
+  done < $1
+}
+
+
 
 ##############################
 #                            #
@@ -292,17 +298,14 @@ elif [ "$config" = false ];then
 fi
 
 
-if [ "$EUID" -eq 0 ] || [ $(isUserAllowed $currentUser) = true ];then
+if [ "$EUID" -eq 0 ] || [ $(checkUserGroup $currentUser) -eq 0 ];then
   log "$currentUser started Tacheron"
   while true;
   do
-      while read task;do
-        if [ ! -z $(isValidField "$task") ];then
-          timeField=$(echo $task|awk '{for(i=1;i<=6;i++) print $i}')
-          commande=$(echo $task|awk '{for(i=7;i<=NF;i++) print $i}')
-          analyseAndExecute $timeField "$commande"
-        fi
-      done < $TASKGENERAL
+    executeTask $TASKGENERAL
+    if [ -f "$TASKUSER/tacherontab$currentUser" ];then
+      executeTask "$TASKUSER/tacherontab$currentUser"
+    fi
       $(sleep 0.7)
   done
 else
